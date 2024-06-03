@@ -7,7 +7,7 @@ main () {
 	"gradle_$cmd"
 }
 
-gradle_build {
+gradle_build () {
 	./gradlew clean build \
 		--refresh-dependencies \
 		--build-cache \
@@ -18,7 +18,7 @@ gradle_build {
 		-PisVerboseCacheToRepo=false
 }
 
-gradle_run {
+gradle_run () {
 	./gradlew run \
 		-Dorg.gradle.jvmargs="-Xmx2g" \
 		--console=rich \
@@ -136,6 +136,7 @@ fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 		val longPath = pathComponents[0].replace(".", "/")
 		val name = pathComponents[1]
 		val version = pathComponents[2]
+		val ext = file.extension
 
 		printVerbose("\tRelative path: $relativePath")
 		printVerbose("\tlongPath: $longPath")
@@ -145,7 +146,17 @@ fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 			try {
 				copy {
 					from(file)
-					into(customRepoDir.toPath().resolve("$longPath/$name/$version"))
+					rename {fileName ->
+						val newName = when ("$name.$ext") {
+							kotlin-gradle-plugin.jar -> "$name-$version.$ext"
+							else -> fileName
+						}
+						if (newName != file.name) {
+							printVerbose("File: ${file.name} - Renamed File To: $newName") 
+						}
+						newName
+					}
+					into("${customRepoDir.toPath()}$longPath/$name/$version"))
 				}
 				printVerbose("Successfully copied ${file.name}.")
 				break

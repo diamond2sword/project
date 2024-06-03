@@ -7,8 +7,7 @@
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    alias(libs.plugins.jvm)
-
+	id("org.jetbrains.kotlin.jvm") version "2.0.0"
     // Apply the application plugin to add support for building a CLI application in Java.
     application
 }
