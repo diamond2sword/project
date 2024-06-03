@@ -2,7 +2,10 @@
 
 main () {
 	local cmd="$1"
-	echo "$OFFLINE_INIT_GRADLE_KTS" > "$HOME/.gradle/init.d/offline-init-gradle.kts"
+	{
+		mkdir -p "$HOME/.gradle/init.d"
+		echo "$OFFLINE_INIT_GRADLE_KTS" > "$HOME/.gradle/init.d/offline-init-gradle.kts"
+	}
 	gradle --stop
 	"gradle_$cmd"
 }
@@ -27,7 +30,7 @@ gradle_run () {
 		-PisVerboseCacheToRepo=false
 }
 
-OFFLINE_INIT_GRADLE_KTS=$(CAT << "EOF"
+OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
 fun main() {
 	addLocalRepo()
 	configureCacheToRepoTask()
