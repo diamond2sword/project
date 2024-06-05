@@ -15,7 +15,13 @@ main () {
 		mkdir -p "$HOME/.gradle/init.d"
 		echo "$OFFLINE_INIT_GRADLE_KTS" > "$HOME/.gradle/init.d/offline-init.gradle.kts"
 	}
-	gradle --stop
+	{
+		related_pid_list=($(ps -A | sed -nE "/(java|gradle)/p" | sed -E 's/^\s*([0-9]+).*/\1/g'))
+		for pid in "${related_pid_list[@]}"; do
+			kill -9 "$pid"
+		done
+		gradle --stop
+	}
 	"gradle_$cmd"
 }
 
@@ -38,6 +44,8 @@ gradle_run () {
 		-PmustSkipCacheToRepo=false \
 		-PisVerboseCacheToRepo=false
 }
+
+
 
 OFFLINE_INIT_GRADLE_KTS=$(cat << "EOF"
 fun main() {
@@ -160,7 +168,7 @@ fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 					from(file)
 					rename {fileName ->
 						val newName = when ("$name.$ext") {
-							kotlin-gradle-plugin.jar -> "$name-$version.$ext"
+							"kotlin-gradle-plugin.jar" -> "$name-$version.$ext"
 							else -> fileName
 						}
 						if (newName != file.name) {
@@ -168,7 +176,7 @@ fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 						}
 						newName
 					}
-					into("${customRepoDir.toPath()}$longPath/$name/$version"))
+					into("${customRepoDir.toPath()}$longPath/$name/$version")
 				}
 				printVerbose("Successfully copied ${file.name}.")
 				break
