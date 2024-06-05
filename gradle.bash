@@ -1,10 +1,19 @@
 #!/bin/bash
 
+REPO_NAME="project"
+
 main () {
 	local cmd="$1"
 	{
+		gradle_wrapper_properties_path="$HOME/$REPO_NAME/gradle/wrapper/gradle-wrapper.properties"
+		echo "$(
+			cat "$gradle_wrapper_properties_path" |
+			sed "s!^distributionUrl=.*!distributionUrl=file\\:$HOME/.gradle/wrapper/dists/gradle-8.5-bin.zip!"
+		)" > "$gradle_wrapper_properties_path"
+	}
+	{
 		mkdir -p "$HOME/.gradle/init.d"
-		echo "$OFFLINE_INIT_GRADLE_KTS" > "$HOME/.gradle/init.d/offline-init-gradle.kts"
+		echo "$OFFLINE_INIT_GRADLE_KTS" > "$HOME/.gradle/init.d/offline-init.gradle.kts"
 	}
 	gradle --stop
 	"gradle_$cmd"
@@ -106,7 +115,7 @@ fun cacheToRepo(mustSkip: Boolean? = null, isVerboseParam: Boolean? = null) {
 	val cacheDir = file("${gradle.gradleUserHomeDir}/caches/modules-2/files-2.1")
 	val customRepoDir = file("${gradle.gradleUserHomeDir}/repos/m2")
 
-	println("cacheToRepo task is called.")
+	println("\ncacheToRepo task is called.")
 	println("cacheDir: $cacheDir")
 	println("customRepoDir: $customRepoDir")
 
