@@ -1,7 +1,7 @@
 #!/bin/bash
 
 main () {
-	local cmd="$1"
+	local cmd="$@"
 	{
 		repo_name="$(basename "$PWD")"
 		gradle_wrapper_properties_path="$HOME/$repo_name/gradle/wrapper/gradle-wrapper.properties"
@@ -50,33 +50,51 @@ EOF
 	)
 
 	force_move_file_with_cmd d "$HOME/.gradle/repos" <(cat << EOF
-		gradle_build || {
-			rm -rf "$HOME/.gradle/repos"
+		gradle_do reset || {
+			rm -rf "$HOME/$repo_name/.gradle" 
+			rm -rf "$HOME/$repo_name/.kotlin" 
+			rm -rf "$HOME/$repo_name/build" 
+			rm -rf "$HOME/$repo_name/app/build" 
+			rm -rf "$HOME/.gradle/caches" 
+			rm -rf "$HOME/.gradle/repos" 
 		}
 EOF
 	)
-	"gradle_$cmd"
+	gradle_do "$cmd"
 }
 
-gradle_build () {
-	./gradlew clean build \
-		--refresh-dependencies \
-		--build-cache \
-		-Dorg.gradle.jvmargs="-Xmx2g" \
-		--console=rich \
-		--warning-mode all \
-		-PmustSkipCacheToRepo=false \
-		-PisVerboseCacheToRepo=false
-}
-
-gradle_run () {
-	./gradlew run \
-		-Dorg.gradle.jvmargs="-Xmx2g" \
-		--offline \
-		--console=rich \
-		--warning-mode all \
-		-PmustSkipCacheToRepo=false \
-		-PisVerboseCacheToRepo=false
+gradle_do () {
+	cmd="$@"
+	[[ "$cmd" =~ reset ]] && {
+		local timer_max=10
+		for i in $(seq 1 $timer_max); do
+			echo "Reseting in $((timer_max - i + 1)) secs..."
+			sleep 1
+		done
+		rm -rf "$HOME/$repo_name/.gradle" 
+		rm -rf "$HOME/$repo_name/.kotlin" 
+		rm -rf "$HOME/$repo_name/build" 
+		rm -rf "$HOME/$repo_name/app/build" 
+		rm -rf "$HOME/.gradle/caches" 
+		rm -rf "$HOME/.gradle/repos" 
+	}
+	eval "$(:
+		echo './gradlew \'
+		[[ "$cmd" =~ version ]] && echo '-v \' || {
+			([[ "$cmd" =~ build ]] || [[ "$cmd" =~ reset ]]) && echo 'clean build --refresh-dependencies \' || {
+				[[ "$cmd" =~ run ]] && echo '--offline \'
+			}
+			[[ "$cmd" =~ run ]] && echo 'run \'
+		}
+		cat << "EOF"
+			-Dorg.gradle.jvmargs="-Xmx2g" \
+			--warning-mode all \
+			--console=rich \
+			--build-cache \
+			-PmustSkipCacheToRepo=false \
+			-PisVerboseCacheToRepo=false
+EOF
+	)"
 }
 
 force_move_file_with_cmd () {
