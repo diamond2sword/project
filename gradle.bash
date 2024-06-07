@@ -68,7 +68,7 @@ gradle_do () {
 	[[ "$cmd" =~ reset ]] && {
 		local timer_max=10
 		for i in $(seq 1 $timer_max); do
-			echo "Reseting in $((timer_max - i + 1)) secs..."
+			echo "Resetting in $((timer_max - i + 1)) secs..."
 			sleep 1
 		done
 		rm -rf "$HOME/$repo_name/.gradle" 
