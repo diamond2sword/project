@@ -41,6 +41,8 @@ EOF
 		echo "Repo Name: $repo_name"
 	}
 
+	
+
 	force_move_file_with_cmd f "$gradle_bin_zip_dir/$gradle_bin_zip_name" <(cat << EOF
 		curl -LJO --create-dirs --output-dir "$gradle_bin_zip_dir" "https://services.gradle.org/distributions/$gradle_bin_zip_name" || {
 			rm -rf "$gradle_bin_zip_dir/$gradle_bin_zip_name"
@@ -60,7 +62,10 @@ EOF
 		}
 EOF
 	)
-	gradle_do "$cmd"
+
+	[[ "cmd" =~ reset ]] || {
+		gradle_do "$cmd"
+	}
 }
 
 gradle_do () {
